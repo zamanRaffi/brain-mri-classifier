@@ -423,7 +423,7 @@ Then open a Pull Request.
 |---|---|
 | **Raffi Zaman** | Full-stack development — frontend, backend, database design, authentication, API development, TensorFlow.js integration, Grad-CAM integration, UI/UX, and deployment |
 | **Md. Jony Islam** | Brain MRI classification model — development, training, evaluation, and TF.js conversion |
-| **Ahanaf Ibant Abani** | Academic project member |
+| **Ahanaf Ibnat Abani** | Academic project member |
 | **Surovi Rani** | Academic project member |
 | **Entezer Ahmed** | Academic project member |
 
