@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  PATIENT
+  DOCTOR
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum PredictionResult {
+  GLIOMA
+  MENINGIOMA
+  PITUITARY
+  NO_TUMOR
+  INCONCLUSIVE
+}
+
+enum DoctorPredictionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  NEEDS_REVIEW
+}
+
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  passwordHash  String
+  role          Role
+  phone         String?
+  avatarUrl     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Doctor-only fields
+  specialization String?
+  bio             String?
+
+  // Relations
+  predictions        Prediction[]      @relation("PatientPredictions")
+  patientAppointments Appointment[]    @relation("PatientAppointments")
+  doctorAppointments  Appointment[]    @relation("DoctorAppointments")
+  sentMessages        ChatMessage[]    @relation("SentMessages")
+  receivedMessages     ChatMessage[]    @relation("ReceivedMessages")
+
+  @@map("users")
+}
+
+model Prediction {
+  id          String            @id @default(cuid())
+  patientId   String
+  patient     User              @relation("PatientPredictions", fields: [patientId], references: [id], onDelete: Cascade)
+  imageUrl    String
+  gradCamUrl  String?
+  result      PredictionResult
+  confidence  Float
+  probabilities Json?
+  notes       String?
+  doctorStatus DoctorPredictionStatus @default(PENDING)
+  doctorComment String?
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  createdAt   DateTime          @default(now())
+
+  @@map("predictions")
+}
+
+model Appointment {
+  id          String            @id @default(cuid())
+  patientId   String
+  patient     User              @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId    String
+  doctor      User              @relation("DoctorAppointments", fields: [doctorId], references: [id], onDelete: Cascade)
+  scheduledAt DateTime
+  status      AppointmentStatus @default(PENDING)
+  reason      String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@map("appointments")
+}
+
+model ChatMessage {
+  id          String   @id @default(cuid())
+  senderId    String
+  sender      User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId  String
+  receiver    User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  content     String
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@map("chat_messages")
+}

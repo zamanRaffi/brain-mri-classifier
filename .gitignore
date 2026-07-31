@@ -1,0 +1,12 @@
+node_modules/
+.next/
+out/
+build/
+.env
+.env*.local
+*.tsbuildinfo
+.DS_Store
+npm-debug.log*
+
+# User-uploaded MRI scans — don't commit patient data
+/public/uploads/

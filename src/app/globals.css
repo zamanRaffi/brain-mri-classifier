@@ -1,0 +1,175 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: Arial, Helvetica, sans-serif;
+
+  /* Clinical Precision AI — color tokens from the Stitch design export */
+  --color-background: #f8f9ff;
+  --color-on-background: #0b1c30;
+  --color-surface: #f8f9ff;
+  --color-surface-dim: #cbdbf5;
+  --color-surface-bright: #f8f9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #eff4ff;
+  --color-surface-container: #e5eeff;
+  --color-surface-container-high: #dce9ff;
+  --color-surface-container-highest: #d3e4fe;
+  --color-surface-variant: #d3e4fe;
+  --color-on-surface: #0b1c30;
+  --color-on-surface-variant: #434655;
+  --color-inverse-surface: #213145;
+  --color-inverse-on-surface: #eaf1ff;
+  --color-outline: #737686;
+  --color-outline-variant: #c3c6d7;
+  --color-surface-tint: #0053db;
+
+  --color-primary: #004ac6;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #2563eb;
+  --color-on-primary-container: #eeefff;
+  --color-inverse-primary: #b4c5ff;
+  --color-primary-fixed: #dbe1ff;
+  --color-primary-fixed-dim: #b4c5ff;
+  --color-on-primary-fixed: #00174b;
+  --color-on-primary-fixed-variant: #003ea8;
+
+  --color-secondary: #00687a;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #57dffe;
+  --color-on-secondary-container: #006172;
+  --color-secondary-fixed: #acedff;
+  --color-secondary-fixed-dim: #4cd7f6;
+  --color-on-secondary-fixed: #001f26;
+  --color-on-secondary-fixed-variant: #004e5c;
+
+  --color-tertiary: #006242;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #007d55;
+  --color-on-tertiary-container: #bdffdb;
+  --color-tertiary-fixed: #6ffbbe;
+  --color-tertiary-fixed-dim: #4edea3;
+  --color-on-tertiary-fixed: #002113;
+  --color-on-tertiary-fixed-variant: #005236;
+
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+}
+
+/* Dark Mode — overrides the same M3-style tokens defined in @theme above.
+   Tailwind v4 emits those as plain CSS custom properties on :root, so
+   re-declaring them under html.dark cascades to every bg-* and text-* utility
+   automatically, no extra dark: classes needed anywhere in the app. */
+html.dark {
+  --color-background: #0b1420;
+  --color-on-background: #e7edf7;
+  --color-surface: #0b1420;
+  --color-surface-dim: #0b1420;
+  --color-surface-bright: #1c2733;
+  --color-surface-container-lowest: #0f1926;
+  --color-surface-container-low: #121d2b;
+  --color-surface-container: #172333;
+  --color-surface-container-high: #1e2c3e;
+  --color-surface-container-highest: #263548;
+  --color-surface-variant: #2a3a4f;
+  --color-on-surface: #e7edf7;
+  --color-on-surface-variant: #a9b7cc;
+  --color-inverse-surface: #e7edf7;
+  --color-inverse-on-surface: #182635;
+  --color-outline: #7d8ba0;
+  --color-outline-variant: #384a61;
+  --color-surface-tint: #9db8ff;
+
+  --color-primary: #9db8ff;
+  --color-on-primary: #002a77;
+  --color-primary-container: #2563eb;
+  --color-on-primary-container: #eeefff;
+  --color-inverse-primary: #004ac6;
+  --color-primary-fixed: #1b3566;
+  --color-primary-fixed-dim: #9db8ff;
+  --color-on-primary-fixed: #dbe1ff;
+  --color-on-primary-fixed-variant: #b4c5ff;
+
+  --color-secondary: #4cd7f6;
+  --color-on-secondary: #00363f;
+  --color-secondary-container: #004e5c;
+  --color-on-secondary-container: #acedff;
+  --color-secondary-fixed: #1c3339;
+  --color-secondary-fixed-dim: #4cd7f6;
+  --color-on-secondary-fixed: #acedff;
+  --color-on-secondary-fixed-variant: #4cd7f6;
+
+  --color-tertiary: #4edea3;
+  --color-on-tertiary: #003824;
+  --color-tertiary-container: #005236;
+  --color-on-tertiary-container: #bdffdb;
+  --color-tertiary-fixed: #1a3327;
+  --color-tertiary-fixed-dim: #4edea3;
+  --color-on-tertiary-fixed: #bdffdb;
+  --color-on-tertiary-fixed-variant: #4edea3;
+
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+}
+
+html.dark .glass-card {
+  background: rgba(15, 25, 38, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+html.dark .soft-shadow,
+html.dark .ambient-shadow {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+html.dark .card-border {
+  border: 1px solid #263548;
+}
+
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-on-surface);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.soft-shadow {
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.05);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #004ac6, #00687a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.ambient-shadow {
+  box-shadow: 0px 4px 20px rgba(0, 74, 198, 0.05);
+}
+ 
+.card-border {
+  border: 1px solid #F1F5F9;
+}
+ 
+.input-focus:focus {
+  border-color: theme('colors.primary');
+  box-shadow: 0 0 0 3px rgba(0, 74, 198, 0.1);
+  outline: none;
+}
