@@ -1,111 +1,464 @@
-# MRI Prediction Platform
+<div align="center">
 
-Next.js (App Router) + Prisma/PostgreSQL + Auth.js, with your trained brain
-tumor MRI model running in-process via `@tensorflow/tfjs-node` — no separate
-Python service needed.
+# 🧠 MRI Prediction Platform
 
-## Structure
+### AI-Powered Brain MRI Classification & Healthcare Management System
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js" alt="Next.js" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/TailwindCSS-4-38BDF8?logo=tailwind-css&logoColor=white" alt="TailwindCSS" />
+  <img src="https://img.shields.io/badge/Prisma-7-2D3748?logo=prisma" alt="Prisma" />
+  <img src="https://img.shields.io/badge/PostgreSQL-336791?logo=postgresql&logoColor=white" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/TensorFlow.js-tfjs--node-FF6F00?logo=tensorflow&logoColor=white" alt="TensorFlow.js" />
+  <img src="https://img.shields.io/badge/Auth.js-NextAuth_v5-000000" alt="Auth.js" />
+</p>
+
+A full-stack healthcare platform that combines **AI-powered MRI classification**, **explainable AI**, **doctor–patient collaboration**, and **secure role-based access** — all in one Next.js application, with model inference running **in-process** (no separate Python server).
+
+Built with ❤️ by students of the Department of CSE, **Bangladesh University of Business and Technology (BUBT)**.
+
+⭐ If you find this project useful, consider giving it a star.
+
+</div>
+
+---
+
+## 📑 Table of Contents
+
+- [Overview](#-overview)
+- [Key Features](#-key-features)
+- [How It Works](#-how-it-works)
+- [System Architecture](#-system-architecture)
+- [Project Structure](#-project-structure)
+- [Tech Stack](#-tech-stack)
+- [Database Schema](#-database-schema)
+- [Getting Started](#-getting-started)
+- [Environment Variables](#-environment-variables)
+- [Authentication & Roles](#-authentication--roles)
+- [Explainable AI (Grad-CAM)](#-explainable-ai-grad-cam)
+- [Deployment Notes](#-deployment-notes)
+- [Roadmap](#-roadmap)
+- [Contributing](#-contributing)
+- [Project Team](#-project-team)
+- [Licensing & Ownership](#-licensing--ownership)
+- [Disclaimer](#-disclaimer)
+- [Contact](#-contact)
+
+---
+
+## 📖 Overview
+
+**MRI Prediction Platform** is an AI-powered healthcare web app for automated brain MRI analysis and patient–doctor management.
+
+Instead of shipping a separate Python inference server, the platform loads a trained TensorFlow.js model directly inside the **Next.js backend** (`@tensorflow/tfjs-node`) and serves predictions from a standard API route — keeping the deployment simple and self-contained.
+
+Patients and doctors interact through one shared ecosystem:
+
+- Brain MRI upload & classification
+- Grad-CAM visual explanations
+- Prediction history & doctor review workflow
+- Appointment booking
+- Secure in-app chat
+- Role-based dashboards
+
+---
+
+## ✨ Key Features
+
+<table>
+<tr>
+<td valign="top" width="50%">
+
+### 🤖 AI Brain MRI Classification
+- In-process TensorFlow.js inference (no Python backend)
+- 4-class prediction: Glioma, Meningioma, Pituitary, No Tumor
+- Confidence score + full probability distribution
+- Low-confidence / inconclusive detection
+- Persisted prediction history per patient
+
+### 📊 Explainable AI
+- Grad-CAM heatmap generated per prediction
+- Highlights the image regions driving the model's decision
+- Shown on the result page, patient history, and doctor reports
+
+</td>
+<td valign="top" width="50%">
+
+### 👤 Patient Portal
+- Register / login securely
+- Upload MRI scans & view results
+- Browse prediction history
+- Book appointments with doctors
+- Chat with assigned doctors
+
+### 👨‍⚕️ Doctor Portal
+- Review patient MRI predictions
+- Approve / reject / flag predictions for review
+- Inspect Grad-CAM visualizations
+- Manage appointments & chat with patients
+
+</td>
+</tr>
+</table>
+
+### 🔒 Security
+Auth.js authentication · hashed passwords · JWT sessions · role-based middleware · protected API routes · Prisma-parameterized queries (SQL-injection safe)
+
+---
+
+## 🎯 How It Works
+
+```text
+ Patient Login → Upload MRI → TensorFlow.js Model
+                                     │
+                       ┌─────────────┴─────────────┐
+                       ▼                            ▼
+              Predicted Class +               Grad-CAM Heatmap
+              Confidence Score
+                       │                            │
+                       └─────────────┬──────────────┘
+                                     ▼
+                     Saved to PostgreSQL (via Prisma)
+                                     │
+                       ┌─────────────┴─────────────┐
+                       ▼                            ▼
+              Patient Dashboard              Doctor Dashboard
+           (history, appointments,        (review predictions,
+                chat with doctor)           Grad-CAM, chat)
 ```
+
+**Prediction pipeline in detail:**
+
+`MRI upload` → `validation` → `resize to 224×224` → `TensorFlow.js inference` → `softmax + confidence`→ `Grad-CAM overlay` → `saved to PostgreSQL` → `rendered on dashboard`
+
+---
+
+## 🏗️ System Architecture
+
+```text
+                         ┌──────────────────────────┐
+                         │   Browser (Patient/Doctor) │
+                         └─────────────┬─────────────┘
+                                       ▼
+                         ┌──────────────────────────┐
+                         │  Next.js App Router (UI)  │
+                         └─────────────┬─────────────┘
+                                       │
+        ┌──────────────────────────────┼───────────────────────────────┐
+        ▼                              ▼                                ▼
+  Auth API (Auth.js)          Prediction API (tfjs-node)        Appointment / Chat API
+        │                              │                                │
+        └──────────────┬───────────────┴────────────────┬───────────────┘
+                        ▼                                ▼
+                PostgreSQL (Prisma ORM)          TensorFlow.js Model
+                                                  (ml-model/brain-tumor-model)
+```
+
+---
+
+## 📂 Project Structure
+
+```text
 mri-platform/
+├── ml-model/brain-tumor-model/   # model.json + sharded weights (.bin)
+├── prisma/
+│   ├── migrations/
+│   └── schema.prisma
+├── public/
+│   ├── uploads/                  # user-uploaded scans + Grad-CAM images
+│   └── images/, icons/
 ├── src/
 │   ├── app/
-│   │   ├── page.tsx, about/, contact/     # Marketing pages
-│   │   ├── login/, signup/                # Auth pages
-│   │   ├── patient/                       # Patient area (protected)
-│   │   │   ├── dashboard/, predict-mri/, history/
-│   │   │   ├── book-appointment/, chat/, profile/
-│   │   ├── doctor/                        # Doctor area (protected)
-│   │   │   ├── dashboard/, appointments/, patient-reports/
-│   │   │   ├── chat/, profile/
-│   │   └── api/                           # signup, predict, appointments, chat, profile
-│   ├── auth.ts / auth.config.ts           # Auth.js config (Credentials + roles)
-│   ├── middleware.ts                      # Role-based route protection
-│   ├── lib/model.ts                       # Loads & runs the trained model
-│   ├── lib/gradcam.ts                     # Grad-CAM heatmap overlay generator
-│   ├── components/
-│   └── lib/
-├── prisma/schema.prisma                   # User, Prediction, Appointment, ChatMessage
-└── ml-model/brain-tumor-model/            # Your trained model, TF.js format
-    ├── model.json
-    └── group1-shard*.bin
+│   │   ├── api/                  # route handlers: predict, signup, auth,
+│   │   │                         #   appointments, chat, profile, notifications
+│   │   ├── patient/               # dashboard, predict-mri, history, chat,
+│   │   │                         #   book-appointment, profile
+│   │   ├── doctor/                # dashboard, patient-reports, appointments,
+│   │   │                         #   chat, profile
+│   │   ├── login/, signup/, about/, contact/
+│   │   └── page.tsx
+│   ├── components/               # ui/, forms/, dashboard/, navbar/, shared/
+│   ├── lib/
+│   │   ├── model.ts              # loads & runs the TF.js model
+│   │   ├── gradcam.ts            # Grad-CAM heatmap generation
+│   │   ├── tfjs-custom-layers.ts
+│   │   ├── prisma.ts
+│   │   └── validation.ts
+│   ├── middleware.ts             # role-based route protection
+│   ├── auth.ts / auth.config.ts  # Auth.js configuration
+│   └── types/
+├── package.json
+├── tsconfig.json
+└── README.md
 ```
 
-## 1. Setup
+---
+
+## 💻 Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 16 (App Router), React 19, TypeScript |
+| Styling | Tailwind CSS 4 |
+| Backend | Next.js Route Handlers |
+| Database | PostgreSQL |
+| ORM | Prisma 7 (`@prisma/adapter-pg`) |
+| Authentication | Auth.js / NextAuth v5 |
+| AI Inference | TensorFlow.js — `@tensorflow/tfjs-node` |
+| Explainability | Custom Grad-CAM implementation |
+| Validation | Zod |
+| Charts | Recharts |
+| PDF export | jsPDF |
+
+---
+
+## 🗄️ Database Schema
+
+Built with **Prisma ORM** on **PostgreSQL**.
+
+```mermaid
+erDiagram
+    USER ||--o{ PREDICTION : "uploads"
+    USER ||--o{ APPOINTMENT : "books (as patient)"
+    USER ||--o{ APPOINTMENT : "attends (as doctor)"
+    USER ||--o{ CHATMESSAGE : "sends"
+    USER ||--o{ CHATMESSAGE : "receives"
+
+    USER {
+        string id PK
+        string name
+        string email UK
+        string passwordHash
+        Role role
+        string phone
+        string specialization
+        string bio
+    }
+
+    PREDICTION {
+        string id PK
+        string patientId FK
+        string imageUrl
+        string gradCamUrl
+        PredictionResult result
+        float confidence
+        json probabilities
+        DoctorPredictionStatus doctorStatus
+        datetime createdAt
+    }
+
+    APPOINTMENT {
+        string id PK
+        string patientId FK
+        string doctorId FK
+        datetime scheduledAt
+        AppointmentStatus status
+        string reason
+    }
+
+    CHATMESSAGE {
+        string id PK
+        string senderId FK
+        string receiverId FK
+        string content
+        boolean read
+        datetime createdAt
+    }
+```
+
+| Model | Purpose |
+|---|---|
+| `User` | Patient & doctor accounts, role, profile fields |
+| `Prediction` | Scan URL, predicted class, confidence, probabilities, Grad-CAM URL, doctor review status |
+| `Appointment` | Patient ↔ doctor scheduling, status |
+| `ChatMessage` | Doctor–patient messages, read state |
+
+**Prediction classes:** `GLIOMA` · `MENINGIOMA` · `PITUITARY` · `NO_TUMOR` · `INCONCLUSIVE` (returned when the model's confidence is too low to commit to a class)
+
+**Doctor review states:** `PENDING` · `APPROVED` · `REJECTED` · `NEEDS_REVIEW`
+
+---
+
+## ⚙️ Getting Started
+
+### 1. Clone & install
 
 ```bash
+git clone https://github.com/zamanRaffi/mri-platform.git
+cd mri-platform
 npm install
-cp .env.example .env
-# fill in DATABASE_URL, AUTH_SECRET (openssl rand -base64 32)
+```
 
+### 2. Configure environment variables
+
+Create a `.env` file in the project root (see [Environment Variables](#-environment-variables) below).
+
+Generate a secure secret:
+
+```bash
+openssl rand -base64 32
+```
+
+### 3. Set up the database
+
+```bash
 npx prisma generate
 npx prisma migrate dev --name init
+```
 
+### 4. Run the dev server
+
+```bash
 npm run dev
 ```
 
-Visit http://localhost:3000 — sign up as either a Patient or a Doctor from
-the same form (there's a role toggle).
+Visit **http://localhost:3000**
 
-## The MRI model
+### Other useful commands
 
-`src/lib/model.ts` loads `ml-model/brain-tumor-model/model.json` once (on
-first prediction) and keeps it in memory. `src/app/api/predict/route.ts`
-calls it directly — decode the uploaded image → resize to 224×224 → predict.
+```bash
+npm run build                              # production build
+npm start                                  # run production build
+npx prisma migrate dev --name <name>       # create a new migration
+npx prisma migrate reset                   # reset the database
+```
 
-- **Classes**: `glioma`, `meningioma`, `notumor` (→ `NO_TUMOR`), `pituitary`
-  — matches `CLASS_NAMES` from your training notebook, in the same order.
-- **Preprocessing**: none needed beyond resizing — your model has
-  `Rescaling` and `Normalization` baked in as its first layers.
-- **Confidence threshold**: predictions under 60% confidence are stored as
-  `INCONCLUSIVE` instead of the raw top class (see `CONFIDENCE_THRESHOLD` in
-  `src/lib/model.ts`) — tune this to taste.
-- The full 4-class probability breakdown is saved in `Prediction.probabilities`
-  (JSON) for later use (e.g. a confidence breakdown chart or Grad-CAM overlay).
+---
 
-### Grad-CAM
+## 🔑 Environment Variables
 
-`src/lib/gradcam.ts` produces a heatmap overlay showing which regions of the
-scan drove the model's prediction. The model is a **dual-branch hybrid**
-(EfficientNetB3 + MobileNetV2, each pooled separately then concatenated
-through an attention gate), so standard single-branch Grad-CAM doesn't
-directly apply. Instead:
+```env
+# PostgreSQL connection string
+DATABASE_URL="postgresql://username:password@localhost:5432/mri_platform"
 
-1. Two small helper models are built that **reuse the original model's
-   weights** (via `model.getLayer(name)`, no copying): one splits off each
-   branch's last conv activation map (`top_activation` for EfficientNet,
-   `out_relu` for MobileNet, both 7×7 for a 224×224 input), the other
-   reconstructs everything from those activations to the final softmax.
-2. `tf.grads` computes the gradient of the predicted class's score with
-   respect to both activation maps.
-3. Each branch gets its own Grad-CAM (channel-weighted, ReLU'd, normalized),
-   the two are resized to 224×224 and averaged, then rendered as a jet-style
-   heatmap composited over the original scan.
+# Auth.js
+AUTH_SECRET="your-secret-key"
+NEXTAUTH_URL="http://localhost:3000"
+```
 
-`/api/predict` calls this after every prediction and stores the resulting
-PNG's path in `Prediction.gradCamUrl` (best-effort — a Grad-CAM failure never
-blocks saving the prediction itself). It's shown in the "Predict MRI" result
-card and in the expandable rows on the patient history / doctor reports
-pages. Run `npx prisma migrate dev` after pulling this change to pick up the
-new `gradCamUrl` column.
+> ⚠️ This repo currently ships a `.env` for local development but no `.env.example` template — copy the block above into your own `.env` file rather than running `cp .env.example .env`.
 
-`@tensorflow/tfjs-node` has native bindings that download from
-`storage.googleapis.com` during `npm install` — make sure that's reachable
-on whatever machine/CI you install on (it is on a normal internet
-connection; just flagging it in case you're behind a restrictive proxy).
+---
 
-## Auth & roles
+## 🔐 Authentication & Roles
 
-- One `User` table with a `role` field (`PATIENT` | `DOCTOR`).
-- `middleware.ts` blocks `/patient/*` from doctors and `/doctor/*` from
-  patients, and redirects logged-out users to `/login`.
-- Session/JWT carries `id` and `role` (see `src/types/next-auth.d.ts`).
+Authentication is handled by **Auth.js**, with JWT sessions and hashed passwords (`bcryptjs`).
 
-## What's stubbed / needs a decision from you
+`src/middleware.ts` enforces role-based access at the route level:
 
-- **Image storage**: `/api/predict` now saves uploaded scans to
-  `public/uploads/<patientId>/...` on local disk. That's fine for a
-  single-server deployment, but won't persist on serverless platforms
-  (Vercel etc.) — swap in S3/Cloudinary there.
-- **Chat**: uses simple polling (every 4s), not WebSockets — fine to start,
-  swap for Pusher/Socket.io/Ably later if you want real-time push.
+| Role | Access |
+|---|---|
+| 👤 Patient | `/patient/*` |
+| 👨‍⚕️ Doctor | `/doctor/*` |
+
+An authenticated user who hits a route outside their role is redirected to their own dashboard; an unauthenticated user is redirected to `/login`.
+
+---
+
+## 🔥 Explainable AI (Grad-CAM)
+
+Every prediction is paired with a **Grad-CAM heatmap** (`src/lib/gradcam.ts`), highlighting the regions of the scan that most influenced the model's decision. This is generated as a best-effort step — if Grad-CAM generation fails, the prediction itself is still saved, so a transient rendering issue never blocks a result from reaching the patient.
+
+Heatmaps are shown on:
+- The prediction result page
+- Patient prediction history
+- Doctor review / patient reports
+
+---
+
+## 🌍 Deployment Notes
+
+- Compatible with any Node.js host: **Vercel, Railway, Render, DigitalOcean, or a plain VPS**.
+- Uploaded MRI images and Grad-CAM outputs are currently written to the **local filesystem** (`public/uploads/`). For serverless/production deployments, swap this for object storage (AWS S3, Cloudinary, Supabase Storage) since local disk doesn't persist across invocations on platforms like Vercel.
+- Make sure the `ml-model/brain-tumor-model/` files are deployed alongside the app and remain accessible to the inference code in `src/lib/model.ts`.
+
+---
+
+## 🚀 Roadmap
+
+**AI**
+- [ ] Multi-model ensemble prediction
+- [ ] MRI image segmentation
+- [ ] DICOM support
+- [ ] Confidence calibration
+- [ ] Automated clinical report generation
+
+**Healthcare**
+- [ ] Video consultation
+- [ ] Email notifications
+- [ ] Prescription management
+- [ ] Doctor verification
+- [ ] Electronic Health Record (EHR) support
+- [ ] Admin dashboard
+
+**Platform**
+- [ ] Docker support
+- [ ] CI/CD pipeline
+- [ ] Cloud storage integration
+- [ ] Real-time chat via WebSockets
+- [ ] Mobile app
+- [ ] Multi-language support
+
+---
+
+## 🤝 Contributing
+
+Contributions, feature suggestions, and bug reports are welcome.
+
+```bash
+git checkout -b feature/new-feature
+git commit -m "Add new feature"
+git push origin feature/new-feature
+```
+
+Then open a Pull Request.
+
+---
+
+## 👥 Project Team
+
+| Name | Responsibilities |
+|---|---|
+| **Raffi Zaman** | Full-stack development — frontend, backend, database design, authentication, API development, TensorFlow.js integration, Grad-CAM integration, UI/UX, and deployment |
+| **Md. Jony Islam** | Brain MRI classification model — development, training, evaluation, and TF.js conversion |
+| **Ahanaf Ibant Abani** | Academic project member |
+| **Surovi Rani** | Academic project member |
+| **Entezer Ahmed** | Academic project member |
+
+Developed as an academic group project in the Department of Computer Science & Engineering, **Bangladesh University of Business and Technology (BUBT)**.
+
+---
+
+## 📄 Licensing & Ownership
+
+This repository bundles two components with distinct ownership:
+
+- **Application source code** (web app, backend, UI, auth, database integration, TF.js integration) — developed primarily by **Raffi Zaman**.
+- **Brain MRI classification model** — developed and trained by **Md. Jony Islam**, included here with permission for academic/research use. Ownership of the trained model remains with its original author; get in touch with them before reusing or redistributing it elsewhere.
+
+---
+
+## ⚠️ Disclaimer
+
+This project was built for **academic and research purposes**. Predictions generated by this platform are **not a substitute for professional medical diagnosis** — always consult a qualified healthcare professional for clinical decisions.
+
+---
+
+## 📬 Contact
+
+**Raffi Zaman** — CSE, BUBT
+GitHub: [@zamanRaffi](https://github.com/zamanRaffi) · Email: raffizaman7@gmail.com
+
+**Md. Jony Islam** — CSE, BUBT
+Email: 22235103399@cse.bubt.edu.bd
+
+<div align="center">
+
+---
+
+**Made by the MRI Prediction Platform Team**
+⭐ Thank you for visiting this repository!
+
+</div>
