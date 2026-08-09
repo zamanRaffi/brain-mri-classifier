@@ -128,10 +128,10 @@ export default function ContactPage() {
                   24/7 technical hotline for urgent scan issues.
                 </p>
                 <a
-                  href="tel:+18005557226"
+                  href="tel:+8801575461957"
                   className="text-sm font-semibold text-primary hover:underline"
                 >
-                  +1 (800) 555-SCAN
+                  +8801575-461957
                 </a>
               </div>
             </div>
@@ -169,57 +169,52 @@ export default function ContactPage() {
             </h2>
 
             <div className="w-full h-[400px] rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(37,99,235,0.05)] border border-outline-variant/30 relative bg-surface-container-highest">
-              {/* Stylized map placeholder (no external map dependency) */}
-              <div
-                className="absolute inset-0"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(rgba(0,74,198,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0,74,198,0.08) 1px, transparent 1px)",
-                  backgroundSize: "32px 32px",
-                }}
-                aria-hidden="true"
+      
+              <iframe
+                title="NeuroBrain BUBT Campus Map"
+                src="https://www.google.com/maps?q=Bangladesh%20University%20of%20Business%20and%20Technology%2C%20Road%208%2C%20Block%20B%2C%20Rupnagar%2C%20Mirpur%2C%20Dhaka%201216&output=embed"
+                className="absolute inset-0 w-full h-full border-0"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
               />
-              <div className="absolute inset-0 bg-gradient-to-br from-surface-container-highest via-surface-container-high to-surface-container" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary text-[48px] drop-shadow-sm">
-                  location_on
-                </span>
-              </div>
 
-              <div className="absolute bottom-6 left-6 md:bottom-8 md:left-8 bg-surface-container-lowest/90 backdrop-blur-md p-6 rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.05)] border border-outline-variant/20 max-w-sm">
+              <div className="absolute bottom-6 left-6 md:bottom-8 md:left-8 bg-surface-container-lowest/90 backdrop-blur-md p-6 rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.05)] border border-outline-variant/20 max-w-sm pointer-events-none">
                 <h3 className="text-lg font-semibold text-primary mb-2">
-                  San Francisco Campus
+                  Dhaka Campus
                 </h3>
                 <p className="text-sm text-on-surface-variant mb-4">
                   Located in the heart of the medical innovation district,
                   offering state-of-the-art diagnostic facilities.
                 </p>
+
                 <a
-                  href="#"
-                  className="text-secondary text-xs font-medium tracking-wide flex items-center gap-1 hover:underline"
+                  href="https://www.google.com/maps/dir/?api=1&destination=Bangladesh+University+of+Business+and+Technology%2C+Road+8%2C+Block+B%2C+Rupnagar%2C+Mirpur%2C+Dhaka+1216"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-secondary text-xs font-medium tracking-wide flex items-center gap-1 hover:underline pointer-events-auto"
                 >
-                  Get Directions
-                  <span className="material-symbols-outlined text-[16px]">
-                    arrow_forward
-                  </span>
-                </a>
-              </div>
+                Get Directions
+                <span className="material-symbols-outlined text-[16px]">
+                  arrow_forward
+                </span>
+              </a>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* FAQ */}
-        <section className="max-w-[800px] mx-auto px-4 md:px-12 py-16 md:py-20">
-          <h2 className="text-2xl md:text-[32px] font-semibold text-primary mb-2 text-center">
-            Frequently Asked Questions
-          </h2>
-          <p className="text-center text-sm text-on-surface-variant mb-10">
-            Quick answers to common clinical and technical inquiries.
-          </p>
+      {/* FAQ */}
+      <section className="max-w-[800px] mx-auto px-4 md:px-12 py-16 md:py-20">
+        <h2 className="text-2xl md:text-[32px] font-semibold text-primary mb-2 text-center">
+          Frequently Asked Questions
+        </h2>
+        <p className="text-center text-sm text-on-surface-variant mb-10">
+          Quick answers to common clinical and technical inquiries.
+        </p>
 
-          <ContactFaq />
-        </section>
-      </main>
+        <ContactFaq />
+      </section>
+    </main >
 
       <SiteFooter />
     </>
