@@ -53,6 +53,16 @@ const NO_TUMOR_MIN_PROBABILITY = 0.97;
 const COLOR_PHOTO_SATURATION_THRESHOLD = 0.12;
 const COLOR_PHOTO_DIFF_THRESHOLD = 0.10;
 
+// Pixels darker than this (on a 0-1 scale) are excluded from the saturation
+// calculation. Near-black pixels (e.g. the background outside the skull in
+// an MRI slice) make (max-min)/max numerically unstable: a 1-unit rounding
+// or compression difference on an almost-black pixel produces a huge ratio
+// even though the absolute color content is negligible. This previously
+// caused grayscale synthetic/AI-generated images (which are rarely
+// pixel-perfect R=G=B, unlike a true DICOM-derived grayscale export) to be
+// misclassified as color photos.
+const SATURATION_MIN_BRIGHTNESS = 0.08;
+
 export const IMAGE_SIZE = 224;
 
 const MODEL_PATH = path.join(
@@ -107,12 +117,23 @@ function getImageColorMetrics(
   const maxRGB = floatImg.max(2);
   const minRGB = floatImg.min(2);
   const delta = maxRGB.sub(minRGB);
+
+  // Only compute the delta/max ratio for pixels bright enough that the
+  // ratio is numerically meaningful; treat darker pixels as having zero
+  // saturation instead of letting them dominate the mean.
+  const isBrightEnough = maxRGB.greater(SATURATION_MIN_BRIGHTNESS);
   const saturation = tf.where(
-    maxRGB.greater(0),
+    isBrightEnough,
     delta.div(maxRGB),
     tf.zerosLike(delta)
   );
-  const meanSaturation = saturation.mean();
+  // Average only over the bright-enough pixels, so large dark backgrounds
+  // (common in MRI slices) don't dilute/skew the signal either way.
+  const brightPixelCount = isBrightEnough
+    .toFloat()
+    .sum()
+    .maximum(tf.scalar(1));
+  const meanSaturation = saturation.sum().div(brightPixelCount);
 
   const gray = floatImg.mean(2);
   const colorDiff = floatImg.sub(gray.expandDims(2)).abs().mean();
