@@ -155,7 +155,7 @@ export async function predictMri(imageBuffer: Buffer): Promise<PredictionOutcome
     const decoded = tf.node.decodeImage(imageBuffer, 3) as import("@tensorflow/tfjs-node").Tensor3D;
     const colorMetrics = getImageColorMetrics(tf, decoded);
     const resized = tf.image.resizeBilinear(decoded, [IMAGE_SIZE, IMAGE_SIZE]);
-    const batched = resized.toFloat().div(255).expandDims(0);
+    const batched = resized.toFloat().expandDims(0);
     return {
       prediction: model.predict(batched) as import("@tensorflow/tfjs-node").Tensor,
       meanSaturation: colorMetrics.meanSaturation,
