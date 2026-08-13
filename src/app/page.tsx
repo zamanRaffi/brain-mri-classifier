@@ -90,6 +90,7 @@ export default function Home() {
               src="/hero-brain-mri.png"
               alt="A luminous 3D holographic brain projection representing AI-powered NeuroBrainl analysis"
               fill
+              sizes="(max-width: 768px) 100vw, 50vw"
               priority
               className="object-cover"
             />

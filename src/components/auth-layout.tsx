@@ -22,6 +22,7 @@ export default function AuthLayout({
           src="/auth-brain.jpeg"
           alt="NeuroBrain"
           fill
+          sizes="(max-width: 1024px) 100vw, 50vw"
           priority
           className="object-cover object-center"
         />

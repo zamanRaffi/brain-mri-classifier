@@ -48,6 +48,7 @@ export default function AboutPage() {
               src="/about-hero-brain.jpg"
               alt="A luminous 3D brain illustration with glowing NeuroBrainl connection points, labeled About - NeuroBrain"
               fill
+              sizes="(max-width: 768px) 100vw, 50vw"
               priority
               className="object-cover"
             />
