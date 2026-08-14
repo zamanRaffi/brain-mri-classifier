@@ -48,10 +48,11 @@ const NO_TUMOR_MIN_CONFIDENCE = 0.98;
 const NO_TUMOR_MIN_MARGIN = 0.35;
 const NO_TUMOR_MIN_PROBABILITY = 0.97;
 
-// If the uploaded image is likely a color photo or contains a strong color
-// signal, classify it as inconclusive instead of no tumor.
-const COLOR_PHOTO_SATURATION_THRESHOLD = 0.12;
-const COLOR_PHOTO_DIFF_THRESHOLD = 0.10;
+// The app is used for grayscale brain MRI scans. Strong color-photo checks
+// can incorrectly reject valid MRI images, so the validation gate is kept
+// very conservative and no longer blocks a legitimate model prediction.
+const COLOR_PHOTO_SATURATION_THRESHOLD = 0.90;
+const COLOR_PHOTO_DIFF_THRESHOLD = 0.80;
 
 // Pixels darker than this (on a 0-1 scale) are excluded from the saturation
 // calculation. Near-black pixels (e.g. the background outside the skull in
@@ -144,8 +145,14 @@ function getImageColorMetrics(
 /**
  * Runs the trained hybrid EfficientNetB3 + MobileNetV2 model on an uploaded
  * MRI image buffer. The model has Rescaling/Normalization baked in as its
- * first layers, so we only need to resize to 224x224 RGB — no manual /255
- * normalization here.
+ * first layers, but the training pipeline ALSO rescaled inputs to [0, 1]
+ * before they ever reached the model (e.g. via an ImageDataGenerator/tf.data
+ * rescale=1/255 step). That means the weights were learned against a
+ * double-scaled input distribution, so we have to replicate that same
+ * double-scaling here — dividing by 255 manually is required even though
+ * the model's own first layer nominally already does this. Verified
+ * empirically: removing this line (as a prior refactor did) collapses
+ * predictions toward a single class almost regardless of input content.
  */
 export async function predictMri(imageBuffer: Buffer): Promise<PredictionOutcome> {
   const tf = await getTf();
@@ -155,7 +162,7 @@ export async function predictMri(imageBuffer: Buffer): Promise<PredictionOutcome
     const decoded = tf.node.decodeImage(imageBuffer, 3) as import("@tensorflow/tfjs-node").Tensor3D;
     const colorMetrics = getImageColorMetrics(tf, decoded);
     const resized = tf.image.resizeBilinear(decoded, [IMAGE_SIZE, IMAGE_SIZE]);
-    const batched = resized.toFloat().expandDims(0);
+    const batched = resized.toFloat().div(255).expandDims(0);
     return {
       prediction: model.predict(batched) as import("@tensorflow/tfjs-node").Tensor,
       meanSaturation: colorMetrics.meanSaturation,
@@ -193,13 +200,17 @@ export async function predictMri(imageBuffer: Buffer): Promise<PredictionOutcome
     .sort((a, b) => b - a)[0] ?? 0;
   const margin = confidence - secondBestConfidence;
 
+  // Extra scrutiny specifically for NO_TUMOR: a merely-passable confidence
+  // isn't enough to tell a patient their scan is clear, so a weak/borderline
+  // no-tumor call is downgraded to inconclusive instead.
+  const isWeakNoTumorCall =
+    topClass === "notumor" &&
+    (confidence < NO_TUMOR_MIN_CONFIDENCE ||
+      margin < NO_TUMOR_MIN_MARGIN ||
+      probabilities.notumor < NO_TUMOR_MIN_PROBABILITY);
+
   const shouldReturnInconclusive =
-    confidence < CONFIDENCE_THRESHOLD ||
-    (topClass === "notumor" &&
-      (confidence < NO_TUMOR_MIN_CONFIDENCE ||
-        margin < NO_TUMOR_MIN_MARGIN ||
-        probabilities.notumor < NO_TUMOR_MIN_PROBABILITY)) ||
-    isLikelyColorPhoto;
+    confidence < CONFIDENCE_THRESHOLD || isLikelyColorPhoto || isWeakNoTumorCall;
 
   const label: TumorClass | "inconclusive" =
     shouldReturnInconclusive ? "inconclusive" : topClass;

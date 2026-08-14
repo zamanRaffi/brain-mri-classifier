@@ -9,10 +9,21 @@ type Doctor = {
   specialization: string | null;
 };
 
+
+const TIME_SLOTS = ["02:00", "04:00", "06:00", "08:00", "10:00"] as const;
+
+function formatSlotLabel(slot: string) {
+  const [hourStr] = slot.split(":");
+  const hour = Number(hourStr);
+  // All slots are PM in this clinic's schedule (2/4/6/8/10 PM).
+  return `${hour}:00 PM`;
+}
+
 export default function BookAppointmentForm({ doctors }: { doctors: Doctor[] }) {
   const router = useRouter();
   const [doctorId, setDoctorId] = useState(doctors[0]?.id ?? "");
-  const [scheduledAt, setScheduledAt] = useState("");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState<string>("");
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -22,7 +33,14 @@ export default function BookAppointmentForm({ doctors }: { doctors: Doctor[] }) 
     e.preventDefault();
     setError("");
     setSuccess(false);
+
+    if (!date || !time) {
+      setError("Select both date and time");
+      return;
+    }
+
     setLoading(true);
+    const scheduledAt = `${date}T${time}`;
 
     const res = await fetch("/api/appointments", {
       method: "POST",
@@ -34,11 +52,13 @@ export default function BookAppointmentForm({ doctors }: { doctors: Doctor[] }) 
 
     if (!res.ok) {
       const data = await res.json();
-      setError(data.error || "সমস্যা হয়েছে");
+      setError(data.error || "Something went wrong");
       return;
     }
 
     setSuccess(true);
+    setDate("");
+    setTime("");
     setReason("");
     router.refresh();
   }
@@ -106,15 +126,40 @@ export default function BookAppointmentForm({ doctors }: { doctors: Doctor[] }) 
 
         <div>
           <label className="block text-xs font-medium tracking-wide text-on-surface-variant mb-2">
-            Date &amp; Time
+            Date
           </label>
           <input
-            type="datetime-local"
+            type="date"
             required
-            value={scheduledAt}
-            onChange={(e) => setScheduledAt(e.target.value)}
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
             className="w-full bg-surface border border-outline-variant/50 rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
           />
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium tracking-wide text-on-surface-variant mb-2">
+            Time
+          </label>
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+            {TIME_SLOTS.map((slot) => {
+              const isSelected = time === slot;
+              return (
+                <button
+                  key={slot}
+                  type="button"
+                  onClick={() => setTime(slot)}
+                  className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
+                    isSelected
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-outline-variant/50 text-on-surface hover:border-primary/50"
+                  }`}
+                >
+                  {formatSlotLabel(slot)}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div>

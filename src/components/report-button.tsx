@@ -3,6 +3,13 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 
+
+function getConfidenceLabel(confidence: number): string {
+  if (confidence >= 0.9) return "High";
+  if (confidence >= 0.75) return "Moderate";
+  return "Low — recommend radiologist verification";
+}
+
 type ReportButtonProps = {
   result: string;
   confidence: number;
@@ -87,7 +94,7 @@ export function ReportButton({
       doc.setFontSize(10);
       doc.text(`Result: ${result.replace(/_/g, " ")}`, margin, y);
       y += 16;
-      doc.text(`Confidence: ${(confidence * 100).toFixed(1)}%`, margin, y);
+      doc.text(`Confidence: ${getConfidenceLabel(confidence)}`, margin, y);
       y += 16;
       doc.text(`Date: ${date.toLocaleString()}`, margin, y);
       y += 16;

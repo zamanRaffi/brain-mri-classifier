@@ -43,6 +43,41 @@ const EXPLANATION_REASONS: Record<string, string[]> = {
   ],
 };
 
+// Maps the model's raw softmax confidence into a category for display,
+// instead of showing the raw percentage (e.g. "98.53%"). A raw percentage
+// implies a level of precision/calibration the model doesn't actually have
+// — softmax confidence is known to be overconfident, especially on
+// low-quality or unusual images. The underlying number is still used
+// internally (server-side) for the inconclusive/no-tumor safety thresholds;
+// this only changes what's shown to the user.
+type ConfidenceLevel = {
+  label: string;
+  icon: string;
+  badgeClass: string;
+};
+
+function getConfidenceLevel(confidence: number): ConfidenceLevel {
+  if (confidence >= 0.9) {
+    return {
+      label: "High confidence",
+      icon: "verified",
+      badgeClass: "bg-primary/10 text-primary",
+    };
+  }
+  if (confidence >= 0.75) {
+    return {
+      label: "Moderate confidence",
+      icon: "info",
+      badgeClass: "bg-tertiary/10 text-tertiary",
+    };
+  }
+  return {
+    label: "Low confidence — please verify with a radiologist",
+    icon: "warning",
+    badgeClass: "bg-error/10 text-error",
+  };
+}
+
 function getExplanationReasons(result: string) {
   const key = result.toLowerCase();
   return EXPLANATION_REASONS[key] ?? [
@@ -305,25 +340,6 @@ export default function PredictForm() {
         </button>
       </form>
 
-      {isInconclusive && (
-        <div className="bg-error-container/40 border border-error/30 rounded-2xl p-6 flex flex-col items-center text-center gap-3">
-          <p className="text-xs uppercase tracking-wide text-on-error-container/80">
-            Image Validation
-          </p>
-          <span className="material-symbols-outlined text-error text-4xl">
-            report
-          </span>
-          <h3 className="font-semibold text-on-error-container">
-            This doesn&apos;t appear to be a brain MRI.
-          </h3>
-          <p className="text-sm text-on-error-container/80 max-w-sm">
-            The model couldn&apos;t confidently match this image to a known
-            brain MRI pattern (confidence {(result!.confidence * 100).toFixed(1)}%).
-            Please upload a clear axial brain MRI scan and try again.
-          </p>
-        </div>
-      )}
-
       {result && !isInconclusive && (
         <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 soft-shadow p-6">
           <div className="flex items-center gap-2 mb-4">
@@ -348,12 +364,19 @@ export default function PredictForm() {
                 {result.result.replace(/_/g, " ")}
               </h3>
             </div>
-            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-              <span className="material-symbols-outlined text-[16px]">
-                verified
-              </span>
-              {(result.confidence * 100).toFixed(1)}% Confidence
-            </span>
+            {(() => {
+              const level = getConfidenceLevel(result.confidence);
+              return (
+                <span
+                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium ${level.badgeClass}`}
+                >
+                  <span className="material-symbols-outlined text-[16px]">
+                    {level.icon}
+                  </span>
+                  {level.label}
+                </span>
+              );
+            })()}
           </div>
 
           <p className="text-xs text-on-surface-variant mt-4">
