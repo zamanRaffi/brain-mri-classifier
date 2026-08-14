@@ -5,7 +5,7 @@ import Providers from "@/components/providers";
 import { ThemeProvider, NO_FLASH_THEME_SCRIPT } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
-  title: "NeuroBrain- AI-Powered NeuroBrainl Analysis",
+  title: "NeuroBrain- AI-Powered NeuroBrain Analysis",
   description:
     "Upload your MRI image and receive an AI-assisted classification within seconds.",
 };
